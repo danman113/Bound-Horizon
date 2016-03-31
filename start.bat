@@ -1,1 +1,1 @@
-node ./node_modules/nodeshare-edit/index.js --port=8080
+node ./node_modules/nodeshare-edit/index.js --port=${PORT?8080}

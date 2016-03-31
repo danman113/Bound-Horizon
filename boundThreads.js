@@ -1,6 +1,6 @@
 importScripts('./libs/simplex-noise.min.js','./libs/seedrandom.min.js','./libs/pmap.js');
+var map = new pmap();
 onmessage = function(e){
-	console.log('hello from threads', e);
 	switch(e.data.type){
 		case 'create':
 			generateMap(e);
@@ -12,13 +12,16 @@ onmessage = function(e){
 };
 
 function generateMap(e){
-	var hi = new pmap();
+	
 	var data = e.data.options;
-	hi.generate(data.resolution,data.seed,data.x,data.y,data.z);
-	postMessage(new response('create',hi.map));
+	map.generate(data.resolution,data.seed,data.x,data.y,data.z);
+	postMessage(new response('create',{map:map.map,moisture:map.moisture}, e.data.id));
+	map.map = [];
+	map.moisture = [];
 }
 
-function response(type,options){
+function response(type, options, id){
 	this.type = type;
 	this.data = options;
+	this.id = id;
 }

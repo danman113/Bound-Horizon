@@ -1,17 +1,23 @@
-function engine(images, main, draw, update){
+/* global PIXI Tink */
+
+function engine(images, obj){
 	//public:
 	
-	var _this = this;
-	this.renderer = null;
-	this.stage = null;
-	this.tink = null;
-	this.width = 0;
-	this.height = 0;
-	this.frames = 0;
-	this.images = images;
-	this.main = main;
-	this.draw = draw;
-	this.update = update;
+	var _this         = this;
+	this.renderer     = null;
+	this.stage        = null;
+	this.tink         = null;
+	this.width        = 0;
+	this.height       = 0;
+	this.frames       = 0;
+	this.images       = images;
+	this.main         = obj.main;
+	this.draw         = obj.draw;
+	this.update       = obj.update;
+	this.mouseDown    = obj.mouseDown || function(){};
+	this.mouseRelease = obj.mouseRelease || function(){};
+	this.mouseTap     = obj.mouseTap || function(){};
+	
 	this.mouse = null;
 	this.settings = {numberOfThreads:null};
 	if(window.Worker){
@@ -20,10 +26,9 @@ function engine(images, main, draw, update){
 			var worker = new Worker('boundThreads.js');
 			this.threads.push(worker);
 			worker.onmessage = function(e){
-				switch(e.data.type){
-					case 'create':
-						console.log(e.data.data);
-					break;
+				if(typeof requestCallbacks[e.data.id]=='function'){
+					requestCallbacks[e.data.id](e.data.data);
+					delete requestCallbacks[e.data.id];
 				}
 			};
 		}
@@ -32,6 +37,10 @@ function engine(images, main, draw, update){
 	}
 	//methods:
 	
+	/**
+	 * Initializes the engine. Creates PIXI elements and appends it to the body
+	 *
+	 */
 	this.init = function(){
 		_this.renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
 		_this.width = window.innerWidth;
@@ -44,14 +53,18 @@ function engine(images, main, draw, update){
 		_this.stage = new PIXI.Container();
 		_this.tink = new Tink(PIXI, _this.renderer.view);
 		_this.mouse = _this.tink.makePointer();
-		_this.mouse.release = function(){boundHorizon.testThreads(10);};
+		_this.mouse.release = _this.mouseRelease;
+		_this.mouse.press = _this.mouseDown;
+		_this.mouse.tap = _this.mouseTap;
+		
 		makeLoading();
+		
 		PIXI.loader
 		.add(_this.images)
 		.on("progress", loading)
 		.load(doneLoading);
+		
 		drawFrame();
-		_this.renderer.render(_this.stage);
 	};
 	/**
 	 * Returns rectangle graphic
@@ -78,15 +91,23 @@ function engine(images, main, draw, update){
 		}
 		return rectangle;
 	};
+	
+	this.makeTileMap = function(){
+		
+	}
 
 	/**
 	 * Will distribute a list of request among the worker threads.
 	 * @param  {TRequest[]} orders an array of TRequest
 	 * @return {void}
 	 */
-	this.orderMultiple = function(orders){
-		for (var i = orders.length - 1; i >= 0; i--) {
+	this.orderMultiple = function(orders, callbacks){
+		for (var i = 0; i < orders.length; ++i) {
 			this.threads[i%this.threads.length].postMessage(orders[i]);
+			if(typeof callbacks == 'function')
+				requestCallbacks[orders[i].id] = callbacks;
+			else if (i<callbacks.length)
+				requestCallbacks[orders[i].id] = callbacks[i];
 		}
 	};
 
@@ -96,10 +117,10 @@ function engine(images, main, draw, update){
 	 * @param  {Number}   [threadNumber] Optional specific thread to use
 	 * @return {void}
 	 */
-	this.order = function(order, threadNumber){
+	this.order = function(order, callback, threadNumber){
 		if(threadNumber == null)
 			threadNumber = Math.floor(Math.random()*(this.threads.length-1));
-		console.log('using thread ' + threadNumber);
+		requestCallbacks[order.id] = callback;
 		this.threads[threadNumber].postMessage(order);
 	};
 
@@ -109,6 +130,7 @@ function engine(images, main, draw, update){
 	var makeLoading = null;
 	var doneLoading = null;
 	var drawFrame = null;
+	var requestCallbacks = {};
 	loading = function(loader, asset){
 		var w = (_this.width/3-4)*(loader.progress/100);
 		var fillRect1 = _this.makeRoundRectangle('solid',w,48,0xff2222);
@@ -145,7 +167,44 @@ function engine(images, main, draw, update){
 	};
 }
 
-function TRequest(type,options){
-	this.type = type;
-	this.options = options;
+var TRequest = tr();
+
+function tr(){
+	var i = 0;
+	return function(type,options){
+		this.type = type;
+		this.options = options;
+		this.id = i++;
+	}
+}
+
+function tilemap(map,mapFunction,tileWidth,tileHeight){
+	this.map = map;
+	this.graphic = new PIXI.Container();
+	this.mapFunction = mapFunction;
+	this.create = function(){
+		var map = this.map;
+		for (var i = 0; i < map.length; ++i) {
+			for (var j = 0; j < map[i].length; ++j) {
+				var tile = new PIXI.Sprite(this.mapFunction(map[i][j]));
+				tile.x = j*tileWidth;
+				tile.y = i*tileHeight;
+				tile.width = tileWidth;
+				tile.height = tileHeight;
+				this.graphic.addChild(tile);
+			}
+		}
+		return this.graphic;
+	}
+	
+	this.update = function(){
+		var map = this.map;
+		for (var i = 0; i < map.length; ++i) {
+			for (var j = 0; j < map[i].length; ++j) {
+				var tile = this.mapFunction(map[i][j]);
+				this.graphic.children[i*map.length+j].texture = tile;
+			}
+		}
+	}
+	
 }

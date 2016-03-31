@@ -34,7 +34,7 @@ function pmap(height,width){
 				this.map[y][x] += noise(xfreq/2*nx*zoom*aspect, yfreq/2*ny*zoom*aspect)*0.4;
 				this.map[y][x] += noise(xfreq/4*nx*zoom*aspect, yfreq/4*ny*zoom*aspect)*0.25;
 				this.map[y][x] += noise(xfreq/6*nx*zoom*aspect, yfreq/6*ny*zoom*aspect)*0.1;
-				this.map[y][x]/= (1+0.4+0.25+0.1);
+				this.map[y][x] /= (1+0.4+0.25+0.1);
 				this.map[y][x] = Math.pow(this.map[y][x],e);
 			}
 		}

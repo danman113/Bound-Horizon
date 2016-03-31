@@ -1,3 +1,5 @@
+/* global PIXI Tink engine TRequest */
+
 function snapshot(x,y){
 	this.x = x;
 	this.y = y;
@@ -8,7 +10,11 @@ function snapshot(x,y){
 }
 
 function game(){
-	this.map = new pmap();
+	var _this = this;
+	this.map = null;
+	this.tilemap = null;
+	this.tiles = {};
+	this.seed = 42;
 	this.container = new PIXI.Container();
 	this.settings = {zoom:1,resolution:128,seed:42};
 	this.activeSnapshots = {};
@@ -42,23 +48,33 @@ function game(){
 	};
 	this.bg = {x:-0.5,y:-0.5,img:new PIXI.Graphics(),minimap:new PIXI.Graphics()};
 	this.init = function(){
-		this.renderSnapshot(this.bg.img,this.bg.x,this.bg.y);
-		this.renderSnapshot(this.bg.minimap,this.bg.x,this.bg.y,1,5);
-		window.hi = new PIXI.Graphics();
-		this.renderSnapshot(window.hi,this.bg.x+3,this.bg.y,1,5);
-		this.bg.minimap.scale.x = 0.1;
-		this.bg.minimap.scale.y = 0.1;
-		hi.scale.x = 0.1;
-		hi.scale.y = 0.1;
-		hi.position.x = hi.width;
-		
-		//this.container.addChild(this.bg.img);
-		this.container.addChild(this.bg.minimap);
-		this.container.addChild(hi);
-		this.player.sprite = new PIXI.Sprite(PIXI.utils.TextureCache["sword2.png"]);
-		this.container.addChild(this.player.sprite);
-		this.player.sprite.x = renderer.width/2-renderer.width/2%32;
-		this.player.sprite.y = renderer.height/2-renderer.height/2%32;
+		console.log('Program is now running');
+		this.engine.order(new TRequest('create',{x:5,y:5,z:1,resolution:128,seed:this.seed}), function(data){
+			_this.map = data;
+			_this.tiles['ocean']    = PIXI.utils.TextureCache['./assets/ocean.png'];
+			_this.tiles['river']    = PIXI.utils.TextureCache['./assets/river.png'];
+			_this.tiles['sand']     = PIXI.utils.TextureCache['./assets/sand.png'];
+			_this.tiles['trans']    = PIXI.utils.TextureCache['./assets/trans.png'];
+			_this.tiles['grass']    = PIXI.utils.TextureCache['./assets/grass.png'];
+			_this.tiles['mountain'] = PIXI.utils.TextureCache['./assets/mountain.png'];
+			_this.tiles['snow']     = PIXI.utils.TextureCache['./assets/snow.png'];
+			_this.tiles['ice']      = PIXI.utils.TextureCache['./assets/ice.png'];
+			_this.tilemap = new tilemap(data.map,
+			function(e){
+				if (e < 0.5) return _this.tiles['ocean'];
+				if (e < 0.55) return _this.tiles['river'];
+				else if (e < 0.6) return _this.tiles['sand'];
+				else if (e < 0.65) return _this.tiles['trans'];
+				else if (e < 0.8) return _this.tiles['grass'];
+				else if (e < 0.9) return _this.tiles['mountain'];
+				else if (e < 0.95) return _this.tiles['snow'];
+				else return _this.tiles['ice'];
+			},40,40);
+			var map = _this.tilemap.create();
+			map.width = _this.engine.width;
+			map.height = _this.engine.height;
+			_this.engine.stage.addChild(map);
+		});
 	};
 	this.getWorldPosition = function(){
 
@@ -111,24 +127,48 @@ function game(){
 	  else if (e < 0.95) return 0xddeeff;
 	  else return 0x000000;
 	};
-	this.engine = new engine(['./assets/load1.png','./assets/load2.png','./assets/grass.png','./assets/ice.png','./assets/mountain.png','./assets/mountainrock.png','./assets/ocean.png','./assets/river.png','./assets/sand.png','./assets/snow.png','./assets/sword2.png','./assets/trans.png'],function(){
-		console.log('all loaded');
-	},function(){
-		if(PIXI.loader.progress == 100){
-			
-		}
-	},function(){
-		if(PIXI.loader.progress == 100){
-
-		}
-	});
+	
 	this.testThreads = function(x){
 		var requests = [];
 		for (var i = x - 1; i >= 0; i--) {
-			requests.push(new TRequest('create',{x:5,y:5,z:1,resolution:128,seed:50}));
+			requests.push(new TRequest('create',{x:5,y:5,z:1,resolution:1024,seed:50}));
 		}
-		this.engine.orderMultiple(requests);
+		this.engine.orderMultiple(requests, function(data){
+			console.log(data);
+		});
 	};
+	this.engineObject = {
+		main:function(){
+			console.log('all assets loaded');
+			_this.init();
+		},
+		update:function(){
+			
+		},
+		draw:function(){
+			
+		},
+		mouseRelease:function(){
+			_this.engine.order(new TRequest('create',{x:5,y:5,z:1,resolution:128,seed:++_this.seed}), function(data){
+				_this.tilemap.map = data.map;
+				_this.tilemap.update();
+			});
+		}
+	};
+	this.engine = new engine([
+		'./assets/load1.png',
+		'./assets/load2.png',
+		'./assets/grass.png',
+		'./assets/ice.png',
+		'./assets/mountain.png',
+		'./assets/mountainrock.png',
+		'./assets/ocean.png',
+		'./assets/river.png',
+		'./assets/sand.png',
+		'./assets/snow.png',
+		'./assets/sword2.png',
+		'./assets/trans.png'],
+	this.engineObject);
 }
 var boundHorizon = new game();
 window.onload = boundHorizon.engine.init;
