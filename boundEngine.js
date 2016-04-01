@@ -49,7 +49,13 @@ function engine(images, obj){
 		_this.renderer.view.style.top = "0px";
 		_this.renderer.view.style.left = "0px";
 		_this.renderer.view.style.display = "block";
+		_this.renderer.view.mozImageSmoothingEnabled = false
+		_this.renderer.view.webkitImageSmoothingEnabled = false;
 		document.body.appendChild(_this.renderer.view);
+		_this.stats = new Stats();
+		document.body.appendChild( _this.stats.domElement );
+		_this.stats.domElement.style.position = "absolute";
+		_this.stats.domElement.style.top = "0px";
 		_this.stage = new PIXI.Container();
 		_this.tink = new Tink(PIXI, _this.renderer.view);
 		_this.mouse = _this.tink.makePointer();
@@ -139,7 +145,6 @@ function engine(images, obj){
 		if(_this.stage.children.length>1)
 			_this.stage.removeChildAt(1);
 		_this.stage.addChild(fillRect1);
-		_this.renderer.render(_this.stage);
 	};
 
 	makeLoading = function(){
@@ -153,16 +158,17 @@ function engine(images, obj){
 		for (var i = _this.stage.children.length - 1; i >= 0; i--) {
 			_this.stage.removeChildAt(i);
 		}
-		_this.renderer.render(_this.stage);
 		_this.main();
 	};
 
 	drawFrame = function(){
 		_this.frames++;
-		_this.tink.update();
+		_this.stats.begin();
+		//_this.tink.update();
 		_this.update();
 		_this.draw();
 		_this.renderer.render(_this.stage);
+		_this.stats.end();
 		window.requestAnimationFrame(drawFrame);
 	};
 }
@@ -205,6 +211,7 @@ function tilemap(map,mapFunction,tileWidth,tileHeight){
 				this.graphic.children[i*map.length+j].texture = tile;
 			}
 		}
+		this.graphic.cacheAsBitmap = !this.graphic.cacheAsBitmap;
 	}
 	
 }

@@ -49,7 +49,7 @@ function game(){
 	this.bg = {x:-0.5,y:-0.5,img:new PIXI.Graphics(),minimap:new PIXI.Graphics()};
 	this.init = function(){
 		console.log('Program is now running');
-		this.engine.order(new TRequest('create',{x:5,y:5,z:1,resolution:128,seed:this.seed}), function(data){
+		this.engine.order(new TRequest('create',{x:5,y:5,z:1,resolution:this.settings.resolution,seed:this.seed}), function(data){
 			_this.map = data;
 			_this.tiles['ocean']    = PIXI.utils.TextureCache['./assets/ocean.png'];
 			_this.tiles['river']    = PIXI.utils.TextureCache['./assets/river.png'];
@@ -72,8 +72,8 @@ function game(){
 			},40,40);
 			var map = _this.tilemap.create();
 			map.width = _this.engine.width;
-			map.height = _this.engine.height;
-			_this.engine.stage.addChild(map);
+			map.height = _this.engine.width;
+			//_this.engine.stage.addChild(map);
 		});
 	};
 	this.getWorldPosition = function(){
@@ -143,16 +143,27 @@ function game(){
 			_this.init();
 		},
 		update:function(){
-			
+			if(_this.engine.mouse.isDown){
+				var offsetX = boundHorizon.tilemap.graphic.x;
+				var offsetY = boundHorizon.tilemap.graphic.y;
+				var width = boundHorizon.tilemap.graphic._width;
+				var height = boundHorizon.tilemap.graphic._height;
+				var x = Math.floor(((_this.engine.mouse.x-offsetX)/width)*_this.settings.resolution);
+				var y = Math.floor(((_this.engine.mouse.y-offsetY)/height)*_this.settings.resolution);
+				console.log(width,height);
+				_this.tilemap.map[y][x] = 1;
+				_this.tilemap.update();
+			}
 		},
 		draw:function(){
 			
 		},
 		mouseRelease:function(){
-			_this.engine.order(new TRequest('create',{x:5,y:5,z:1,resolution:128,seed:++_this.seed}), function(data){
-				_this.tilemap.map = data.map;
-				_this.tilemap.update();
-			});
+			// _this.engine.order(new TRequest('create',{x:5,y:5,z:1,resolution:128,seed:++_this.seed}), function(data){
+			// 	_this.tilemap.map = data.map;
+			// 	_this.tilemap.update();
+			// });
+			
 		}
 	};
 	this.engine = new engine([
