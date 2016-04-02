@@ -15,7 +15,7 @@ function pmap(height,width){
 		return map;
 	};
 
-	this.generate = function(size, seed, x_, y_, zoom){
+	this.generate = function(size, seed, y_, x_, zoom){
 		this.map = generateMap(size);
 		zoom = zoom?zoom:1;
 		this.moisture = generateMap(size);

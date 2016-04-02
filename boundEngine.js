@@ -17,6 +17,7 @@ function engine(images, obj){
 	this.mouseDown    = obj.mouseDown || function(){};
 	this.mouseRelease = obj.mouseRelease || function(){};
 	this.mouseTap     = obj.mouseTap || function(){};
+	this.controls     = {};
 	
 	this.mouse = null;
 	this.settings = {numberOfThreads:null};
@@ -62,7 +63,12 @@ function engine(images, obj){
 		_this.mouse.release = _this.mouseRelease;
 		_this.mouse.press = _this.mouseDown;
 		_this.mouse.tap = _this.mouseTap;
-		
+		setUpKeyboard({
+			'up':38,
+			'down':40,
+			'left':37,
+			'right':39
+		})
 		makeLoading();
 		
 		PIXI.loader
@@ -136,6 +142,7 @@ function engine(images, obj){
 	var makeLoading = null;
 	var doneLoading = null;
 	var drawFrame = null;
+	var setUpKeyboard = null;
 	var requestCallbacks = {};
 	loading = function(loader, asset){
 		var w = (_this.width/3-4)*(loader.progress/100);
@@ -160,11 +167,20 @@ function engine(images, obj){
 		}
 		_this.main();
 	};
+	
+	setUpKeyboard = function(keycodes){
+		_this.controls = {
+			'up':_this.tink.keyboard(keycodes['up']),
+			'down':_this.tink.keyboard(keycodes['down']),
+			'left':_this.tink.keyboard(keycodes['left']),
+			'right':_this.tink.keyboard(keycodes['right'])
+		}
+	};
 
 	drawFrame = function(){
 		_this.frames++;
 		_this.stats.begin();
-		//_this.tink.update();
+		_this.tink.update();
 		_this.update();
 		_this.draw();
 		_this.renderer.render(_this.stage);
@@ -200,18 +216,20 @@ function tilemap(map,mapFunction,tileWidth,tileHeight){
 				this.graphic.addChild(tile);
 			}
 		}
+		this.graphic.cacheAsBitmap = true;
 		return this.graphic;
 	}
 	
 	this.update = function(){
 		var map = this.map;
+		this.graphic.cacheAsBitmap = null;
 		for (var i = 0; i < map.length; ++i) {
 			for (var j = 0; j < map[i].length; ++j) {
 				var tile = this.mapFunction(map[i][j]);
 				this.graphic.children[i*map.length+j].texture = tile;
 			}
 		}
-		this.graphic.cacheAsBitmap = !this.graphic.cacheAsBitmap;
+		this.graphic.cacheAsBitmap = true;
 	}
 	
 }

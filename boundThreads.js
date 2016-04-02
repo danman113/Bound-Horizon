@@ -15,7 +15,7 @@ function generateMap(e){
 	
 	var data = e.data.options;
 	map.generate(data.resolution,data.seed,data.x,data.y,data.z);
-	postMessage(new response('create',{map:map.map,moisture:map.moisture}, e.data.id));
+	postMessage(new response('create',{map:map.map,moisture:map.moisture,x:data.x,y:data.y,z:data.z}, e.data.id));
 	map.map = [];
 	map.moisture = [];
 }

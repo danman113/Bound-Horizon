@@ -1,4 +1,4 @@
-/* global PIXI Tink engine TRequest */
+/* global PIXI Tink engine TRequest tilemap */
 
 function snapshot(x,y){
 	this.x = x;
@@ -11,11 +11,12 @@ function snapshot(x,y){
 
 function game(){
 	var _this = this;
+	this.loaded = false;
 	this.map = null;
 	this.tilemap = null;
 	this.tiles = {};
-	this.seed = 42;
-	this.container = new PIXI.Container();
+	this.coord = {x:5,y:5};
+	this.mainMap = {nw:null,ne:null,sw:null,se:null};
 	this.settings = {zoom:1,resolution:128,seed:42};
 	this.activeSnapshots = {};
 	this.addSnapshot = function(x,y,snap){
@@ -33,88 +34,103 @@ function game(){
 			return a.x==x && a.y==y;
 		});
 	};
-	this.renderSnapshot = function(rectangle,x_,y_,zoom ,tileSize){
-		zoom = zoom?zoom:this.settings.zoom;
-		tileSize = tileSize?tileSize:32;
-		this.map.generate(3*this.settings.resolution,this.settings.seed,x_-zoom*0.5*3,y_-zoom*0.5*3,zoom*3);
-		rectangle.clear();
-		var map = this.map.map;
-		for (var y = map.length - 1; y >= 0; y--) {
-			for (var i = map[y].length - 1; i >= 0; i--) {
-				rectangle.beginFill(this.biome(map[y][i]));
-				rectangle.drawRect(y*tileSize,i*tileSize,tileSize,tileSize);
-			}
-		}
-	};
+
 	this.bg = {x:-0.5,y:-0.5,img:new PIXI.Graphics(),minimap:new PIXI.Graphics()};
 	this.init = function(){
 		console.log('Program is now running');
-		this.engine.order(new TRequest('create',{x:5,y:5,z:1,resolution:this.settings.resolution,seed:this.seed}), function(data){
-			_this.map = data;
-			_this.tiles['ocean']    = PIXI.utils.TextureCache['./assets/ocean.png'];
-			_this.tiles['river']    = PIXI.utils.TextureCache['./assets/river.png'];
-			_this.tiles['sand']     = PIXI.utils.TextureCache['./assets/sand.png'];
-			_this.tiles['trans']    = PIXI.utils.TextureCache['./assets/trans.png'];
-			_this.tiles['grass']    = PIXI.utils.TextureCache['./assets/grass.png'];
-			_this.tiles['mountain'] = PIXI.utils.TextureCache['./assets/mountain.png'];
-			_this.tiles['snow']     = PIXI.utils.TextureCache['./assets/snow.png'];
-			_this.tiles['ice']      = PIXI.utils.TextureCache['./assets/ice.png'];
-			_this.tilemap = new tilemap(data.map,
-			function(e){
-				if (e < 0.5) return _this.tiles['ocean'];
-				if (e < 0.55) return _this.tiles['river'];
-				else if (e < 0.6) return _this.tiles['sand'];
-				else if (e < 0.65) return _this.tiles['trans'];
-				else if (e < 0.8) return _this.tiles['grass'];
-				else if (e < 0.9) return _this.tiles['mountain'];
-				else if (e < 0.95) return _this.tiles['snow'];
-				else return _this.tiles['ice'];
-			},40,40);
-			var map = _this.tilemap.create();
-			map.width = _this.engine.width;
-			map.height = _this.engine.width;
-			//_this.engine.stage.addChild(map);
-		});
+		_this.tiles['ocean']    = PIXI.utils.TextureCache['./assets/ocean.png'];
+		_this.tiles['river']    = PIXI.utils.TextureCache['./assets/river.png'];
+		_this.tiles['sand']     = PIXI.utils.TextureCache['./assets/sand.png'];
+		_this.tiles['trans']    = PIXI.utils.TextureCache['./assets/trans.png'];
+		_this.tiles['grass']    = PIXI.utils.TextureCache['./assets/grass.png'];
+		_this.tiles['mountain'] = PIXI.utils.TextureCache['./assets/mountain.png'];
+		_this.tiles['snow']     = PIXI.utils.TextureCache['./assets/snow.png'];
+		_this.tiles['ice']      = PIXI.utils.TextureCache['./assets/ice.png'];
+		var mapFunc = function(e){
+			if (e < 0.5) return _this.tiles['ocean'];
+			if (e < 0.55) return _this.tiles['river'];
+			else if (e < 0.6) return _this.tiles['sand'];
+			else if (e < 0.65) return _this.tiles['trans'];
+			else if (e < 0.8) return _this.tiles['grass'];
+			else if (e < 0.9) return _this.tiles['mountain'];
+			else if (e < 0.95) return _this.tiles['snow'];
+			else return _this.tiles['ice'];
+		};
+		var tSize = 20;
+		_this.mainMap.nw = new tilemap([],mapFunc,tSize,tSize);
+		_this.mainMap.sw = new tilemap([],mapFunc,tSize,tSize);
+		_this.mainMap.ne = new tilemap([],mapFunc,tSize,tSize);
+		_this.mainMap.se = new tilemap([],mapFunc,tSize,tSize);
+		_this.render();
+		_this.loaded = true;
+		/*
+		var map = _this.tilemap.create();
+		map.width = _this.engine.width;
+		map.height = _this.engine.width;
+		_this.engine.stage.addChild(map);
+		*/
 	};
-	this.getWorldPosition = function(){
-
+	this.getWorldPosition = function(x,y){
+		var x = Math.floor((x%1)*_this.settings.resolution);
+		var y = Math.floor((y%1)*_this.settings.resolution);
+		return [x,y];
 	};
 	this.render = function(){
-		var dx = 0;
-		var dy = 0;
-		if((this.player.x - this.bg.x)<-1.5){
-			this.bg.x-=1.5;
-			this.renderSnapshot(this.bg.img,this.bg.x,this.bg.y);
-			this.renderSnapshot(window.hi,this.bg.x+3,this.bg.y,1,5);
-			this.renderSnapshot(this.bg.minimap,this.bg.x,this.bg.y,1,5);
-			console.log('building new');
-		}
-		if((this.player.x - this.bg.x)>1.3){
-			this.bg.x+=1.5;
-			this.renderSnapshot(this.bg.img,this.bg.x,this.bg.y);
-			this.renderSnapshot(window.hi,this.bg.x+3,this.bg.y,1,5);
-			this.renderSnapshot(this.bg.minimap,this.bg.x,this.bg.y,1,5);
-			console.log('building new');
-		}
-		if((this.player.y - this.bg.y)<-1.5){
-			this.bg.y-=1.5;
-			this.renderSnapshot(this.bg.img,this.bg.x,this.bg.y);
-			this.renderSnapshot(window.hi,this.bg.x+3,this.bg.y,1,5);
-			this.renderSnapshot(this.bg.minimap,this.bg.x,this.bg.y,1,5);
-			console.log('building new');
-		}
-		if((this.player.y - this.bg.y)>1.1){
-			this.bg.y+=1.5;
-			this.renderSnapshot(this.bg.img,this.bg.x,this.bg.y);
-			this.renderSnapshot(window.hi,this.bg.x+3,this.bg.y,1,5);
-			this.renderSnapshot(this.bg.minimap,this.bg.x,this.bg.y,1,5);
-			console.log('building new');
-		}
-
-		var xOffset = (this.player.x - this.bg.x)*this.settings.resolution*32+this.settings.resolution*32*1.5;
-		var yOffset = (this.player.y - this.bg.y)*this.settings.resolution*32+this.settings.resolution*32*1.5;
-		this.bg.img.x = -1*xOffset;
-		this.bg.img.y = -1*yOffset;
+		var i = 0;
+		var create = this.mainMap.nw.map.length?false:true;
+		var x = Math.ceil(this.coord.x);
+		var y = Math.ceil(this.coord.y);
+		
+		//[1,2]
+		//[4,3] 3=x,y
+		// console.log("("+(x-1)+","+(y-1)+")"+"("+x+","+(y-1)+")");
+		// console.log("("+(x-1)+","+y+")"+"("+x+","+y+")");
+		
+		_this.engine.orderMultiple(
+			[
+			new TRequest('create',{x:x-1,y:y-1,z:1,resolution:_this.settings.resolution,seed:_this.settings.seed}),
+			new TRequest('create',{x:x,y:y-1,z:1,resolution:_this.settings.resolution,seed:_this.settings.seed}),
+			new TRequest('create',{x:x,y:y,z:1,resolution:_this.settings.resolution,seed:_this.settings.seed}),
+			new TRequest('create',{x:x-1,y:y,z:1,resolution:_this.settings.resolution,seed:_this.settings.seed})
+			], 
+		function(data){
+			//console.log(data.x,data.y);
+			if(data.x == x-1 && data.y == y-1){
+				_this.mainMap.nw.map = data.map;
+			} else if (data.x == x && data.y == y-1){
+				_this.mainMap.ne.map = data.map;
+			} else if (data.x == x && data.y == y){
+				_this.mainMap.se.map = data.map;
+			} else if (data.x == x-1 && data.y == y){
+				_this.mainMap.sw.map = data.map;
+			}
+			++i;
+			if(i == 4){
+				if(create){
+					var nw = _this.mainMap.nw.create();
+					var ne = _this.mainMap.ne.create();
+					ne.x = nw.width;
+					var se = _this.mainMap.se.create();
+					se.x = nw.width;
+					se.y = nw.height;
+					var sw = _this.mainMap.sw.create();
+					sw.y = nw.height;
+					_this.tilemap = new PIXI.Container();
+					_this.tilemap.addChild(nw);
+					_this.tilemap.addChild(ne);
+					_this.tilemap.addChild(se);
+					_this.tilemap.addChild(sw);
+					_this.engine.stage.addChild(_this.tilemap);
+					_this.tilemap.width  = _this.engine.width;
+					_this.tilemap.height = _this.engine.width;
+				} else {
+					_this.mainMap.nw.update();
+					_this.mainMap.ne.update();
+					_this.mainMap.sw.update();
+					_this.mainMap.se.update();
+				}
+			}
+		});
 		
 	};
 	this.biome = function(e) {
@@ -143,26 +159,38 @@ function game(){
 			_this.init();
 		},
 		update:function(){
-			if(_this.engine.mouse.isDown){
-				var offsetX = boundHorizon.tilemap.graphic.x;
-				var offsetY = boundHorizon.tilemap.graphic.y;
-				var width = boundHorizon.tilemap.graphic._width;
-				var height = boundHorizon.tilemap.graphic._height;
-				var x = Math.floor(((_this.engine.mouse.x-offsetX)/width)*_this.settings.resolution);
-				var y = Math.floor(((_this.engine.mouse.y-offsetY)/height)*_this.settings.resolution);
-				console.log(width,height);
-				_this.tilemap.map[y][x] = 1;
-				_this.tilemap.update();
+			
+			if(_this.loaded){
+				_this.engine.controls.left.release = () => {_this.coord.x-=1;_this.render();console.log('l');}
+				_this.engine.controls.right.release = () => {_this.coord.x+=1;_this.render();console.log('r');}
+				_this.engine.controls.up.release = () => {_this.coord.y-=1;_this.render();console.log('u');}
+				_this.engine.controls.down.release = () => {_this.coord.y+=1;_this.render();console.log('d');}
+				// if(_this.engine.controls.left.isDown){
+				// 	_this.coord.x+=0.2;
+				// } else if (_this.engine.controls.right.isDown){
+				// 	_this.coord.x-=0.2;
+				// } else if (_this.engine.controls.up.isDown){
+				// 	_this.coord.y-=0.2;
+				// } else if (_this.engine.controls.down.isDown){
+				// 	_this.coord.y+=0.2;
+				// }
+				if(_this.engine.mouse.isDown){
+					// var offsetX = boundHorizon.tilemap.graphic.x;
+					// var offsetY = boundHorizon.tilemap.graphic.y;
+					// var width = boundHorizon.tilemap.graphic._width;
+					// var height = boundHorizon.tilemap.graphic._height;
+					// var x = Math.floor(((_this.engine.mouse.x-offsetX)/width)*_this.settings.resolution);
+					// var y = Math.floor(((_this.engine.mouse.y-offsetY)/height)*_this.settings.resolution);
+					// _this.tilemap.map[y][x] = 1;
+					// _this.tilemap.update();
+				}
 			}
+			
 		},
 		draw:function(){
 			
 		},
 		mouseRelease:function(){
-			// _this.engine.order(new TRequest('create',{x:5,y:5,z:1,resolution:128,seed:++_this.seed}), function(data){
-			// 	_this.tilemap.map = data.map;
-			// 	_this.tilemap.update();
-			// });
 			
 		}
 	};
