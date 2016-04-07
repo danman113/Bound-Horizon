@@ -1,4 +1,4 @@
-/* global PIXI Tink */
+/* global PIXI Tink Stats navigator */
 
 function engine(images, obj){
 	//public:

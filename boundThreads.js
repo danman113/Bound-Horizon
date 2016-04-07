@@ -1,3 +1,4 @@
+/*global pmap*/
 importScripts('./libs/simplex-noise.min.js','./libs/seedrandom.min.js','./libs/pmap.js');
 var map = new pmap();
 onmessage = function(e){

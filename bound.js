@@ -34,8 +34,7 @@ function game(){
 			return a.x==x && a.y==y;
 		});
 	};
-
-	this.bg = {x:-0.5,y:-0.5,img:new PIXI.Graphics(),minimap:new PIXI.Graphics()};
+	
 	this.init = function(){
 		console.log('Program is now running');
 		_this.tiles['ocean']    = PIXI.utils.TextureCache['./assets/ocean.png'];
@@ -132,16 +131,6 @@ function game(){
 			}
 		});
 		
-	};
-	this.biome = function(e) {
-	  if (e < 0.5) return 0x102F4A;
-	  if (e < 0.55) return 0x4060C0;
-	  else if (e < 0.6) return 0xD2B98B;
-	  else if (e < 0.65) return 0x559944;
-	  else if (e < 0.8) return 0x337755;
-	  else if (e < 0.9) return 0xBBBBAA;
-	  else if (e < 0.95) return 0xddeeff;
-	  else return 0x000000;
 	};
 	
 	this.testThreads = function(x){
