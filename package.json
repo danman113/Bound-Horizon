@@ -10,7 +10,7 @@
     },
   "dependencies": {
     "nodeshare-edit": "^1.0.0",
-    "nw-builder": "^2.2.0"
+    "nw-builder": "git://github.com/evshiron/nw-builder"
   },
   "devDependencies": {},
   "scripts": {
