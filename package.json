@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "./bound.html",
-  "window":{
-      "width":1280,
-      "height":720,
-      "icon":"./assets/icon.png"
-    },
+  "window": {
+    "width": 1280,
+    "height": 720,
+    "icon": "./assets/icon.png"
+  },
   "dependencies": {
     "nodeshare-edit": "^1.0.0",
-    "nw-builder": "git://github.com/evshiron/nw-builder"
+    "nw-builder": "github:jontro/nw-builder#nwjs-13"
   },
   "devDependencies": {},
   "scripts": {

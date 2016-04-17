@@ -68,7 +68,7 @@ function engine(images, obj){
 			'down':40,
 			'left':37,
 			'right':39
-		})
+		});
 		makeLoading();
 		
 		PIXI.loader
@@ -106,7 +106,7 @@ function engine(images, obj){
 	
 	this.makeTileMap = function(){
 		
-	}
+	};
 
 	/**
 	 * Will distribute a list of request among the worker threads.
