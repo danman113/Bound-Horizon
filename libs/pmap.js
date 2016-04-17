@@ -1,3 +1,4 @@
+/* global SimplexNoise */
 function pmap(height,width){
 	var simplex = new SimplexNoise();
 	function noise(nx, ny) {
