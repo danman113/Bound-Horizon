@@ -2,9 +2,15 @@
   "name": "Bound-Horizon",
   "version": "1.0.0",
   "description": "",
-  "main": "bound.js",
+  "main": "./bound.html",
+  "window":{
+      "width":1280,
+      "height":720,
+      "icon":"./assets/icon.png"
+    },
   "dependencies": {
-    "nodeshare-edit": "^1.0.0"
+    "nodeshare-edit": "^1.0.0",
+    "nw-builder": "^2.2.0"
   },
   "devDependencies": {},
   "scripts": {

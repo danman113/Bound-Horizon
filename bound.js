@@ -161,10 +161,10 @@ function game(){
 		update:function(){
 			
 			if(_this.loaded){
-				_this.engine.controls.left.release = () => {_this.coord.x-=1;_this.render();console.log('l');}
-				_this.engine.controls.right.release = () => {_this.coord.x+=1;_this.render();console.log('r');}
-				_this.engine.controls.up.release = () => {_this.coord.y-=1;_this.render();console.log('u');}
-				_this.engine.controls.down.release = () => {_this.coord.y+=1;_this.render();console.log('d');}
+				_this.engine.controls.left.release = function (){_this.coord.x-=1;_this.render();console.log('l');};
+				_this.engine.controls.right.release =function(){_this.coord.x+=1;_this.render();console.log('r');};
+				_this.engine.controls.up.release = function(){_this.coord.y-=1;_this.render();console.log('u');};
+				_this.engine.controls.down.release = function(){_this.coord.y+=1;_this.render();console.log('d');};
 				// if(_this.engine.controls.left.isDown){
 				// 	_this.coord.x+=0.2;
 				// } else if (_this.engine.controls.right.isDown){
