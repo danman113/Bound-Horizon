@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Bound Horizon</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<script type="text/javascript" src="../libs/stats.min.js"></script>
+	<script src="../libs/seedrandom.min.js"></script>
+	<script src="../libs/simplex-noise.min.js"></script>
+	<script src="../libs/pmap.js"></script>
+	<script src="http://www.babylonjs.com/babylon.js"></script>
+	<script src="./3d.js"></script>
+	<style>
+	html, body {
+		overflow: hidden;
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+	}
+
+	#renderCanvas {
+		width: 100%;
+		height: 100%;
+		touch-action: none;
+	}
+</style>
+</head>
+<body>
+	<canvas id="renderCanvas"></canvas>
+	<script>
+		var canvas = document.getElementById("renderCanvas");
+		var engine = new BABYLON.Engine(canvas, true);
+		var scene = createScene();
+		engine.runRenderLoop(function () {
+			scene.render();
+		});
+
+		window.addEventListener("resize", function () {
+			engine.resize();
+		});
+	</script>
+</body>
+</html>

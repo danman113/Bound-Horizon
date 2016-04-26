@@ -9,6 +9,8 @@ onmessage = function(e){
 		case 'e':
 
 		break;
+		default:
+		console.log("Unmarked type ",e);
 	}
 };
 
