@@ -1,12 +1,15 @@
 var worker = new Worker("../boundThreads.js");
-var option = {type:'create',size:40,options:{x:1,y:1,z:3,resolution:512,seed:(new Date()).getTime()}};
+var option = {type:'create',size:40,scale:10,options:{x:1,y:1,z:3,resolution:512,seed:(new Date()).getTime()}};
 worker.onmessage = function(e){
-	console.log(e.data.data.map);
+	//console.log(e.data.data.map);
 	var pathArray = [];
 	for(var i = 0; i < e.data.data.map.length; i++) {
 		var arr = [];
 		for(var j = 0; j < e.data.data.map[i].length; j++){
-			arr.push(new BABYLON.Vector3(i-option.options.resolution/2,e.data.data.map[i][j]*option.size,j-option.options.resolution/2));
+			arr.push(new BABYLON.Vector3(
+					(i-option.options.resolution/2)*option.scale,
+					e.data.data.map[i][j]*option.size*option.scale-(option.size*option.scale)/2,
+					(j-option.options.resolution/2)*option.scale));
 		}
 		pathArray.push(arr);
 	}
@@ -27,16 +30,15 @@ var pathFunction = function(k) {
 
 var createScene = function () {
 
-	worker.postMessage(option);
 	// This creates a basic Babylon Scene object (non-mesh)
 	var scene = new BABYLON.Scene(engine);
 
 	// This creates and positions a free camera (non-mesh)
-	var camera = new BABYLON.ArcRotateCamera("camera1", 0,0,0,BABYLON.Vector3.Zero(), scene);
+	window.camera = new BABYLON.FreeCamera("camera1",new BABYLON.Vector3(0, 50, -30), scene);
 	console.log(camera.fov = 90);
-	camera.setPosition(new BABYLON.Vector3(0, 15, -30));
+	//camera.setPosition(new BABYLON.Vector3(0, 50, -30));
 	// This targets the camera to scene origin
-	camera.setTarget(BABYLON.Vector3.Zero());
+	//camera.setTarget(BABYLON.Vector3.Zero());
 
 	// This attaches the camera to the canvas
 	camera.attachControl(canvas, true);
@@ -48,8 +50,16 @@ var createScene = function () {
 	light.intensity = 0.7;
 
 	// Our built-in 'sphere' shape. Params: name, subdivs, size, scene
-	var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
-
+	window.sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
+	window.sphere.position.y = 50;
+	//sphere.applyGravity = true;
+	//sphere.checkCollisions = true;
+	scene.gravity = new BABYLON.Vector3(0, -0.8, 0);
+	scene.workerCollisions  = true;
+	scene.collisionsEnabled = true;
+	camera.checkCollisions  = true;
+    //camera.applyGravity     = true;
+    camera.ellipsoid = new BABYLON.Vector3(1, 1, 1);
 	// Move the sphere upward 1/2 its height
 	sphere.position.y = 1;
 
@@ -58,7 +68,7 @@ var createScene = function () {
 	for(var i = option.options.resolution/2*-1; i < option.options.resolution/2; i++) {
 		var arr = [];
 		for(var j = option.options.resolution/2*-1; j<option.options.resolution/2; j++){
-			arr.push(new BABYLON.Vector3(i,-1,j));
+			arr.push(new BABYLON.Vector3(i*option.scale,-1,j*option.scale));
 		}
 		pathArray.push(arr);
 	}
@@ -71,7 +81,12 @@ var createScene = function () {
 	oceanTexture.diffuseColor = new BABYLON.Color3(11/256, 148/256, 240/256);
 	ocean.material = oceanTexture;
 	ocean.position.y = option.size/2;
+	ground.checkCollisions = true;
+	ocean.checkCollisions = true;
 	//groundTexture.wireframe = true;
+	setTimeout(function(){
+		worker.postMessage(option);
+	},1000);
 	return scene;
 
 };
