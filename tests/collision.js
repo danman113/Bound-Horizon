@@ -1,32 +1,51 @@
 var worker = new Worker("../boundThreads.js");
-var option = {type:'create',size:40,scale:10,options:{x:1,y:1,z:3,resolution:512,seed:(new Date()).getTime()}};
+var option = {type:'create',size:40,scale:10,options:{x:1,y:1,z:1,resolution:512,seed:1}};
 var ready = false;
+var grounds = {};
 worker.onmessage = function(e){
-	window.ground = CreateGroundFrom2dArray(
-		'your-mesh-name',
+	var size = 512;
+	// e.data.data.x/=3;
+	// e.data.data.y/=3;
+	var x = 1*(e.data.data.x*(size));
+	var y = 1*(e.data.data.y*(size));
+	console.log(e,x,y);
+	var ground = CreateGroundFrom2dArray(
+		e.data.data.x+"x"+e.data.data.y,
 		e.data.data.map,{
-			width:400, // width of the ground mesh (x axis)
-			height:400, // depth of the ground mesh (z axis)
+			width:size, // width of the ground mesh (x axis)
+			height:size, // depth of the ground mesh (z axis)
 			subdivisions:40,  // number of subdivisions
 			minHeight:0,   // min height
-			maxHeight:30,  // max height
+			maxHeight:100,  // max height
 		},
 		scene
 	);
+	for (var i = e.data.data.map.length - 1; i >= 0; i--) {
+		for (var j = e.data.data.map[i].length - 1; j >= 0; j--) {
+			c.fillStyle = "#"+(biome(e.data.data.map[i][j]).toString());
+			c.fillRect(j+e.data.data.x*512,i+e.data.data.y*512,0.5,0.5);
+		}
+	}
+	grounds[e.data.data.x+"x"+e.data.data.y].map = e.data.data.map;
+	grounds[e.data.data.x+"x"+e.data.data.y].mesh = ground;
 	ground.material = new BABYLON.StandardMaterial("d", scene);
 	//ground.material.wireframe = true;
 	ground.material.diffuseColor = new BABYLON.Color3(0.3, 0.7, 0.3);
 	ground.material.backFaceCulling = false;
-	ground.position = new BABYLON.Vector3(5, -30, -15);
+
+	ground.position = new BABYLON.Vector3(x, -30, y);
 	ground.checkCollisions = true;
-	ground.setPhysicsState({ impostor: BABYLON.PhysicsEngine.HeightmapImpostor, mass: 0, friction: 0.5, restitution: 0.7 });
-	velocity = -1;
-	var hi = camera._onCollisionPositionChange;
-	camera._onCollisionPositionChange = function(x,y,z){
-		hi(x,y,z);
-		if(z && (jumpProgress == 0))
-			velocity = 0;
-	};
+	//ground.setPhysicsState({ impostor: BABYLON.PhysicsEngine.HeightmapImpostor, mass: 0, friction: 0.5, restitution: 0.7 });
+	if(e.data.data.x == 0 && e.data.data.y == 0){
+		velocity = -1;
+		var hi = camera._onCollisionPositionChange;
+		camera._onCollisionPositionChange = function(x,y,z){
+			hi(x,y,z);
+			if(z && (jumpProgress == 0))
+				velocity = 0;
+		};
+	}
+	
 };
 
 var pathFunction = function(k) {
@@ -43,7 +62,10 @@ var pathFunction = function(k) {
 
 var createScene = function () {
 	var scene = new BABYLON.Scene(engine);
-
+	window.stats = new Stats();
+	document.body.appendChild(stats.domElement );
+	stats.domElement.style.position = "absolute";
+	stats.domElement.style.top = "0px";
 	// Lights
 	var light0 = new BABYLON.DirectionalLight("Omni", new BABYLON.Vector3(-2, -5, 2), scene);
 	var light1 = new BABYLON.PointLight("Omni", new BABYLON.Vector3(2, -5, -2), scene);
@@ -56,11 +78,18 @@ var createScene = function () {
 	//Simple crate
 	window.box = BABYLON.Mesh.CreateBox("crate", 2, scene);
 	window.box2 = BABYLON.Mesh.CreateBox("crate2", 2, scene);
+	window.water = BABYLON.Mesh.CreatePlane("impact", 1, scene);
+	window.water.position  = new BABYLON.Vector3(0, -30, 0);
+	window.water.scaling = new BABYLON.Vector3(0xfff, 0xfff, 0xfff);
+	window.water.material = new BABYLON.StandardMaterial("Mat", scene);
+	window.water.material.diffuseColor = new BABYLON.Color3(0, 0.5, 1);
+	window.water.rotation.x = Math.PI/2;
+	window.water.position.y=25;
+	window.c = createCanvas();
 	box2.visibility=0;
 	box.scaling.x = 10;
 	box.scaling.y = 3;
 	box.scaling.z = 10;
-
 	camera.position.x = 40;
 	box.material = new BABYLON.StandardMaterial("Mat", scene);
 	box.material.alpha = 0.9;
@@ -83,7 +112,7 @@ var createScene = function () {
 	//finally, say which mesh will be collisionable
 	//ground.checkCollisions = true;
 	box.checkCollisions = true;
-	worker.postMessage(option);
+	loadChunk(0,0);
 	enablePointerlock(scene);
 	return scene;
 };
@@ -180,9 +209,22 @@ var jump = (function(){
 			velocity = -1;
 			jumpProgress=0;
 		}
-		
 	};
 })();
+
+function loadChunk(x,y){
+	// x*=3;
+	// y*=3;
+	if(grounds[x+"x"+y]){
+		return false;
+	} else {
+		grounds[x+"x"+y] = {x:x,y:y};
+		var option = {type:'create',size:40,scale:10,options:{x:x,y:y,z:1,resolution:512,seed:1}};
+		worker.postMessage(option);
+		return grounds[x+"x"+y];
+	}
+
+}
 
 function initCamera(camera){
 	camera.keysUp = [87, 38];
@@ -190,6 +232,39 @@ function initCamera(camera){
     camera.keysLeft = [65, 37];
     camera.keysRight = [68, 39];
 	camera.inertia=0;
-	camera.speed=10;
+	camera.speed=20;
 	camera.angularSensibility=500;
+	camera.position.y=2000;
+}
+
+function createCanvas(){
+	var canvas = document.createElement('canvas');
+	var c = canvas.getContext('2d');
+	document.body.appendChild(canvas);
+	canvas.style.position = 'absolute';
+	canvas.style.top = "0px";
+	canvas.style.left = "300px";
+	canvas.width = 1000;
+	canvas.height = 1000;
+	return c;
+}
+
+
+
+function biome(e) {
+	var test = [
+		{value:0.5,  color:'102F4A'},
+		{value:0.55, color:'4060C0'},
+		{value:0.6,  color:'D2B98B'},
+		{value:0.65, color:'559944'},
+		{value:0.8,  color:'337755'},
+		{value:0.9,  color:'BBBBAA'},
+		{value:0.9,  color:'ddeeff'},
+		{value:1.01, color:'000000'},
+	];
+	for(var i = 0;i<test.length;++i){
+		var bio = test[i];
+		if(e<bio.value) return bio.color;
+	}
+	return 0xffffff;
 }

@@ -34,7 +34,9 @@
 		var engine = new BABYLON.Engine(canvas, true);
 		var scene = createScene();
 		engine.runRenderLoop(function () {
+			stats.begin();
 			scene.render();
+			stats.end();
 			jump();
 		});
 
@@ -43,9 +45,7 @@
 		});
 		window.addEventListener("keydown", onKeyDown, false);
 		function onKeyDown(e){
-			console.log(e);
 			if(e.keyCode == 32){
-				console.log('space');
 				if(velocity === 0){
 					velocity = 1;
 					jumpProgress++;
