@@ -1,5 +1,5 @@
 var name = prompt('What would you liked to be named?');
-var connection = prompt('What server would you like to connect to?','http://24.6.91.120:8081');
+var connection = prompt('What server would you like to connect to?','http://localhost:8081');
 var socket = io.connect(connection);
 socket.emit('rename', name);
 var users = {};
