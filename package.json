@@ -9,8 +9,11 @@
     "icon": "./assets/icon.png"
   },
   "dependencies": {
+    "body-parser": "^1.15.1",
+    "express": "^4.13.4",
     "nodeshare-edit": "^1.0.0",
-    "nw-builder": "github:jontro/nw-builder#nwjs-13"
+    "nw-builder": "github:jontro/nw-builder#nwjs-13",
+    "socket.io": "^1.4.6"
   },
   "devDependencies": {},
   "scripts": {

@@ -74,3 +74,70 @@ function enablePointerlock(scene){
     document.addEventListener("mozpointerlockchange", pointerlockchange, false);
     document.addEventListener("webkitpointerlockchange", pointerlockchange, false);
 }
+
+function createCanvas(){
+    var canvas = document.createElement('canvas');
+    var c = canvas.getContext('2d');
+    document.body.appendChild(canvas);
+    canvas.style.position = 'absolute';
+    canvas.style.top = "0px";
+    canvas.style.left = "300px";
+    canvas.width = 10;
+    canvas.height = 10;
+    return c;
+}
+
+function simpleGamepad(camera){
+    var speed = camera._computeLocalCameraSpeed();
+    for(var i = 0; i<4;++i){
+        if(!navigator.getGamepads) break;
+        if(!navigator.getGamepads()[i]) continue;
+        var leftY = 1;
+        var leftX = 0;
+        var rightY = 3;
+        var rightX = 2;
+        if(navigator.getGamepads()[i].axes.length>4){
+            rightY = 5;
+            rightX = 2;
+        }
+        if(Math.round(navigator.getGamepads()[i].axes[leftY])==1){
+            camera._localDirection.copyFromFloats(0, 0, -speed);
+            camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
+            BABYLON.Vector3.TransformNormalToRef(camera._localDirection, camera._cameraTransformMatrix, camera._transformedDirection);
+            camera.cameraDirection.addInPlace(camera._transformedDirection);
+        }
+        if(Math.round(navigator.getGamepads()[i].axes[leftY])==-1){
+            camera._localDirection.copyFromFloats(0, 0, speed);
+            camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
+            BABYLON.Vector3.TransformNormalToRef(camera._localDirection, camera._cameraTransformMatrix, camera._transformedDirection);
+            camera.cameraDirection.addInPlace(camera._transformedDirection);
+        }
+        if(Math.round(navigator.getGamepads()[i].axes[leftX])==-1){
+            camera._localDirection.copyFromFloats(-speed, 0, 0);
+            camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
+            BABYLON.Vector3.TransformNormalToRef(camera._localDirection, camera._cameraTransformMatrix, camera._transformedDirection);
+            camera.cameraDirection.addInPlace(camera._transformedDirection);
+
+        }
+        if(Math.round(navigator.getGamepads()[i].axes[leftX])==1){
+            camera._localDirection.copyFromFloats(speed, 0, 0);
+            camera.getViewMatrix().invertToRef(camera._cameraTransformMatrix);
+            BABYLON.Vector3.TransformNormalToRef(camera._localDirection, camera._cameraTransformMatrix, camera._transformedDirection);
+            camera.cameraDirection.addInPlace(camera._transformedDirection);
+        }
+
+        if(Math.round(navigator.getGamepads()[i].axes[rightY])==-1){
+            camera.cameraRotation.x-=0.05;
+        }
+        if(Math.round(navigator.getGamepads()[i].axes[rightY])==1){
+            camera.cameraRotation.x+=0.05;
+        }
+        if(Math.round(navigator.getGamepads()[i].axes[rightX])==-1){
+            camera.cameraRotation.y-=0.05;
+        }
+        if(Math.round(navigator.getGamepads()[i].axes[rightX])==1){
+            camera.cameraRotation.y+=0.05;
+        }
+        break;
+    }
+}
