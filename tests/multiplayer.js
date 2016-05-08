@@ -7,6 +7,7 @@ var chats = [];
 socket.on('connect_error', function(){
 	alert('Unable to connect to server. Starting single player.');
 	main();
+	socket.close();
 });
 socket.on('rename',function(renamed){
 	console.log(renamed);
