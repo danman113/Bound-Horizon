@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bound Horizon Server</title>
+    <script>
+    	setInterval(function(){
+    		if(log && addr){
+    			document.getElementById('title').innerHTML = 'Server running at <a href="'+addr+':'+port+'">'+addr+':'+port+'</a>';
+    			document.getElementById('log').innerHTML = logData;
+    		}
+    	},1000);
+    </script>
+    <script src='./server.js'></script>
+  </head>
+  <body>
+    <h1 id="title">Server is loading</h1>
+	<textarea name="" id="log" cols="50" rows="10" style="width:95%" readonly></textarea>
+  </body>
+</html>

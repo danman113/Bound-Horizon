@@ -1,4 +1,4 @@
-var worker = new Worker("../boundThreads.js");
+var worker = new Worker("./boundThreads.js");
 var option = {type:'create',size:40,scale:10,options:{x:1,y:1,z:3,resolution:512,seed:(new Date()).getTime()}};
 worker.onmessage = function(e){
 	//console.log(e.data.data.map);

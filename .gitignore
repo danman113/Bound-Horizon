@@ -2,3 +2,5 @@ node_modules/
 benchmarks/
 cache/
 nwjs/
+bin/
+releases/

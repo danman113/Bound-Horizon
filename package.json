@@ -2,7 +2,7 @@
   "name": "Bound-Horizon",
   "version": "1.0.0",
   "description": "",
-  "main": "./bound.html",
+  "main": "./index.html",
   "window": {
     "width": 1280,
     "height": 720,

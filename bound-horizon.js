@@ -1,19 +1,20 @@
-var worker = new Worker("./boundThreads.js");
+var worker = new Worker("./src/boundThreads.js");
+var bh = new Engine();
 var seed = 1;
 var option = {type:'create',size:40,scale:10,options:{x:1,y:1,z:1,resolution:512,seed:seed}};
 var swimming = false;
 var ppEffects = false;
 var grounds = {};
-worker.onmessage = function(e){
+var workerCallback = function(data){
 	var size = 1024;
 	var scale = 200;
-	var x = 1*(Math.round(e.data.data.x)*(size));
-	var y = -1*(Math.round(e.data.data.y)*(size));
+	var x = 1*(Math.round(data.x)*(size));
+	var y = -1*(Math.round(data.y)*(size));
 	// console.log(e,x,y);
-	if(!grounds[Math.round(e.data.data.x)+"x"+Math.round(e.data.data.y)]) return false;
+	if(!grounds[Math.round(data.x)+"x"+Math.round(data.y)]) return false;
 	var ground = CreateGroundFrom2dArray(
-		e.data.data.x+"x"+e.data.data.y,
-		e.data.data.map,{
+		data.x+"x"+data.y,
+		data.map,{
 			width:size, // width of the ground mesh (x axis)
 			height:size, // depth of the ground mesh (z axis)
 			subdivisions:60,  // number of subdivisions
@@ -22,8 +23,8 @@ worker.onmessage = function(e){
 		},
 		scene
 	);
-	grounds[Math.round(e.data.data.x)+"x"+Math.round(e.data.data.y)].map = e.data.data.map;
-	grounds[Math.round(e.data.data.x)+"x"+Math.round(e.data.data.y)].mesh = ground;
+	grounds[Math.round(data.x)+"x"+Math.round(data.y)].map = data.map;
+	grounds[Math.round(data.x)+"x"+Math.round(data.y)].mesh = ground;
 	ground.material = new BABYLON.StandardMaterial("d", scene);
 	//ground.material.wireframe = true;
 	ground.material.diffuseColor = new BABYLON.Color3(0.3, 0.7, 0.3);
@@ -32,7 +33,7 @@ worker.onmessage = function(e){
 	ground.position = new BABYLON.Vector3(x, -30, y);
 	ground.checkCollisions = true;
 	//ground.setPhysicsState({ impostor: BABYLON.PhysicsEngine.HeightmapImpostor, mass: 0, friction: 0.5, restitution: 0.7 });
-	if(e.data.data.x == 0 && e.data.data.y == 0){
+	if(data.x == 0 && data.y == 0){
 		velocity = -1;
 		var hi = camera._onCollisionPositionChange;
 		camera._onCollisionPositionChange = function(x,y,z){
@@ -41,7 +42,6 @@ worker.onmessage = function(e){
 				velocity = 0;
 		};
 	}
-	
 };
 
 var pathFunction = function(k) {
@@ -116,7 +116,7 @@ var createScene = function () {
                    0,     0,     0,     0, 0
                 ];
 	window.ppBlur = new BABYLON.ConvolutionPostProcess("Sepia", BABYLON.ConvolutionPostProcess.GaussianKernel , 1, camera, null, engine, true);
-	window.ppBlue = new BABYLON.ColorCorrectionPostProcess("color_correction", "/assets/LUT_MatrixBlue.png", 1.0, camera, null, engine, true);
+	window.ppBlue = new BABYLON.ColorCorrectionPostProcess("color_correction", "./assets/LUT_MatrixBlue.png", 1.0, camera, null, engine, true);
 	return scene;
 };
 
@@ -143,10 +143,9 @@ function loadChunk(x,y){
 		return false;
 	} else {
 		grounds[x+"x"+y] = {x:x,y:y};
-		var option = {type:'create',size:40,scale:10,options:{x:x,y:y,z:1+1/512,resolution:512,seed:seed}};
+		var option = {type:'create',size:40,scale:10,options:{x:x,y:y,z:1+1/256,resolution:256,seed:seed}};
 		setTimeout(function(){
-			worker.postMessage(option);
-			
+			bh.order(new TRequest('create',option.options),workerCallback);
 		},Math.floor(Math.random()*1000));
 		return grounds[x+"x"+y];
 	}

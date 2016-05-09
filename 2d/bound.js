@@ -37,14 +37,14 @@ function game(){
 	
 	this.init = function(){
 		console.log('Program is now running');
-		_this.tiles['ocean']    = PIXI.utils.TextureCache['./assets/ocean.png'];
-		_this.tiles['river']    = PIXI.utils.TextureCache['./assets/river.png'];
-		_this.tiles['sand']     = PIXI.utils.TextureCache['./assets/sand.png'];
-		_this.tiles['trans']    = PIXI.utils.TextureCache['./assets/trans.png'];
-		_this.tiles['grass']    = PIXI.utils.TextureCache['./assets/grass.png'];
-		_this.tiles['mountain'] = PIXI.utils.TextureCache['./assets/mountain.png'];
-		_this.tiles['snow']     = PIXI.utils.TextureCache['./assets/snow.png'];
-		_this.tiles['ice']      = PIXI.utils.TextureCache['./assets/ice.png'];
+		_this.tiles['ocean']    = PIXI.utils.TextureCache['../assets/ocean.png'];
+		_this.tiles['river']    = PIXI.utils.TextureCache['../assets/river.png'];
+		_this.tiles['sand']     = PIXI.utils.TextureCache['../assets/sand.png'];
+		_this.tiles['trans']    = PIXI.utils.TextureCache['../assets/trans.png'];
+		_this.tiles['grass']    = PIXI.utils.TextureCache['../assets/grass.png'];
+		_this.tiles['mountain'] = PIXI.utils.TextureCache['../assets/mountain.png'];
+		_this.tiles['snow']     = PIXI.utils.TextureCache['../assets/snow.png'];
+		_this.tiles['ice']      = PIXI.utils.TextureCache['../assets/ice.png'];
 		var mapFunc = function(e){
 			if (e < 0.5) return _this.tiles['ocean'];
 			if (e < 0.55) return _this.tiles['river'];

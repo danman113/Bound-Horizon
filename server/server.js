@@ -1,14 +1,36 @@
 var port = 8081;
+var addr = "localhost";
+var getIP = require('external-ip')();
+
+getIP(function (err, ip) {
+    if (!err) {
+    	log(ip);
+        addr = ip;
+        log('server at '+addr+":"+port);
+    } else {
+    	require('dns').lookup(require('os').hostname(),
+    	function (err, add, fam) {
+			addr = add;
+			log('server at '+addr+":"+port);
+		});
+    }
+});
+var logData = "";
+function log(str){
+	console.log(str);
+	logData +=str+'\n';
+}
+
 var bh = new Game(24);
 var bodyParser = require('body-parser');
 var app=require('express')();
-app.use(allowCrossDomain);
+
 app.use(bodyParser.json());
 var http=require('http').Server(app);
 var io=require('socket.io')(http);
 
 app.get('/',function(req,res){
-	console.log('request');
+	log('request');
 	res.send('hello world');
 });
 
@@ -17,18 +39,18 @@ io.on('connection',mainConnection);
 function mainConnection(socket){
 	var player = new User(socket);
 	bh.addUser(player);
-	console.log('Player added');
+	log('Player added');
 	socket.on('disconnect',function(){
-		console.log(player.ip+" dCed :C");
+		log(player.ip+" dCed :C");
 		bh.removeUser(player);
 	});
 	socket.on('rename',function(name){
 		var status = bh.rename(player,name);
-		console.log('request rename');
+		log('request rename');
 		player.socket.emit('rename',{status:status,seed:bh.seed});
 	});
 	socket.on('playerUpdate', function(position){
-		//console.log('request playerUpdate',bh.users,position);
+		//log('request playerUpdate',bh.users,position);
 		bh.users[player.name].position = position;
 		var json = {};
 		for(var val in bh.users){
@@ -72,18 +94,18 @@ Game.prototype.rename = function(user,name){
 
 
 function allowCrossDomain (req, res, next) {
-    res.header('Access-Control-Allow-Origin', '24.6.91.120');
+    res.header('Access-Control-Allow-Origin', addr);
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
 }
 
 http.listen(port, function(){
-	console.log("Server started! Listening on port "+port+".");
+	log("Server started! Listening on port "+port+".");
 });
 
 setInterval(function(){
-	console.log(bh.users);
+	log(bh.users);
 },60000);
 
 function userToJson(user){

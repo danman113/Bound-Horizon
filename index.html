@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Bound Horizon</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<!-- Libraries -->
+	<script src="./libs/stats.min.js"></script>
+	<script src="./libs/socket.io.js"></script>
+	<script src="./libs/cannon.min.js"></script>
+	<script src="./libs/seedrandom.min.js"></script>
+	<script src="./libs/simplex-noise.min.js"></script>
+	<script src="./libs/pmap.js"></script>
+	<script src="./libs/babylon.js"></script>
+	<!-- Source code -->
+	<script src="./src/engine.js"></script>
+	<script src="./src/babylonTools.js"></script>
+	<script src="./src/multiplayer.js"></script>
+	<script src="./bound-horizon.js"></script>
+	<style>
+	html, body {
+		overflow: hidden;
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+	}
+	
+	#renderCanvas {
+		width: 100%;
+		height: 100%;
+		touch-action: none;
+	}
+</style>
+</head>
+<body>
+	<canvas id="renderCanvas"></canvas>
+	<script>
+		var canvas = document.getElementById("renderCanvas");
+		var engine = new BABYLON.Engine(canvas, true);
+		function main(){
+			window.scene = createScene();
+			var fCount = 0;
+			engine.runRenderLoop(function () {
+				fCount++;
+				//console.log(navigator.getGamepads()[0].axes);
+				simpleGamepad(camera);
+				stats.begin();
+				scene.render();
+				if(fCount%60===0){
+					streamMap(camera.position,1024);
+				}
+				if(fCount%2===0){
+					if(socket.connected)
+						socket.emit('playerUpdate',camera.position);
+				}
+				stats.end();
+				//jump();
+				walkManager();
+			});
+		}
+		
+
+		window.addEventListener("resize", function () {
+			engine.resize();
+		});
+	</script>
+</body>
+</html>
