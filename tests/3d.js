@@ -1,5 +1,5 @@
 var worker = new Worker("./boundThreads.js");
-var option = {type:'create',size:40,scale:10,options:{x:1,y:1,z:3,resolution:512,seed:(new Date()).getTime()}};
+var option = {type:'create',size:40,scale:10,options:{x:1,y:1,z:3,resolution:512,seed:2}};
 worker.onmessage = function(e){
 	//console.log(e.data.data.map);
 	var pathArray = [];
@@ -75,6 +75,7 @@ var createScene = function () {
 	window.ground = BABYLON.MeshBuilder.CreateRibbon("ground1", {pathArray:pathArray,updatable:true}, scene);
 	window.ocean = BABYLON.MeshBuilder.CreateRibbon("ocean", {pathArray:pathArray,updatable:true}, scene);
 	var groundTexture = new BABYLON.StandardMaterial("texture1", scene);
+
 	ground.material = groundTexture;
 	groundTexture.diffuseColor = new BABYLON.Color3(11/256, 148/256, 68/256);
 	var oceanTexture = new BABYLON.StandardMaterial("texture2", scene);
@@ -87,6 +88,22 @@ var createScene = function () {
 	setTimeout(function(){
 		worker.postMessage(option);
 	},1000);
+
+	window.shaderMaterial = new BABYLON.ShaderMaterial("ocean", scene, {
+		vertex: "./ocean",
+		fragment: "./ocean",
+	},
+	{
+		attributes: ["position", "normal", "uv"],
+		uniforms: ["world", "worldView", "worldViewProjection", "view", "projection",'time','vScale','size','chopyness']
+	});
+	window.refTexture = new BABYLON.Texture("../assets/water.png", scene);
+	shaderMaterial.setFloat('vScale',255);
+	shaderMaterial.setFloat('size',0.5);
+	shaderMaterial.setFloat('chopyness',5);
+	
+	window.shaderMaterial.setTexture('textureSampler',refTexture);
+
 	return scene;
 
 };
